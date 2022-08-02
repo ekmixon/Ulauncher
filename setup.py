@@ -20,19 +20,16 @@ def update_config(libdir, values={}):
     filename = os.path.join(libdir, 'ulauncher/config.py')
     oldvalues = {}
     try:
-        fin = open(filename, 'r')
-        fout = open(filename + '.new', 'w')
+        with open(filename, 'r') as fin:
+            with open(f'{filename}.new', 'w') as fout:
+                for line in fin:
+                    fields = line.split(' = ')  # Separate variable from value
+                    if fields[0] in values:
+                        oldvalues[fields[0]] = fields[1].strip()
+                        line = "%s = %s\n" % (fields[0], values[fields[0]])
+                    fout.write(line)
 
-        for line in fin:
-            fields = line.split(' = ')  # Separate variable from value
-            if fields[0] in values:
-                oldvalues[fields[0]] = fields[1].strip()
-                line = "%s = %s\n" % (fields[0], values[fields[0]])
-            fout.write(line)
-
-        fout.flush()
-        fout.close()
-        fin.close()
+                fout.flush()
         os.rename(fout.name, fin.name)
     except (OSError, IOError):
         print("ERROR: Can't find %s" % filename)
@@ -48,16 +45,16 @@ def move_desktop_file(root, target_data, prefix):
     # the main system to be found.  Only actually useful for /opt installs.
 
     old_desktop_path = os.path.normpath(root + target_data + '/share/applications')
-    old_desktop_file = old_desktop_path + '/ulauncher.desktop'
+    old_desktop_file = f'{old_desktop_path}/ulauncher.desktop'
     desktop_path = os.path.normpath(root + prefix + '/share/applications')
-    desktop_file = desktop_path + '/ulauncher.desktop'
+    desktop_file = f'{desktop_path}/ulauncher.desktop'
 
     if not os.path.exists(old_desktop_file):
         print("ERROR: Can't find", old_desktop_file)
         sys.exit(1)
     elif os.path.normpath(target_data) != os.path.normpath(prefix):
         # This is an /opt install, so rename desktop file to use extras-
-        desktop_file = desktop_path + '/extras-ulauncher.desktop'
+        desktop_file = f'{desktop_path}/extras-ulauncher.desktop'
         try:
             os.makedirs(desktop_path)
             os.rename(old_desktop_file, desktop_file)
@@ -76,9 +73,10 @@ def update_desktop_file(filename, target_pkgdata, target_scripts):
 
         dst = re.sub(
             r"((Try)?Exec)=(.*?)(/[^ ]+/)?ulauncher(.*)",
-            r"\1=\3{}ulauncher\5".format(target_scripts),
-            src
+            f"\1=\3{target_scripts}ulauncher\5",
+            src,
         )
+
 
         with open(filename, "w") as fout:
             fout.write(dst)
@@ -93,10 +91,9 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
 
         # Root is undefined if not installing into an alternate root
         root = self.root or "/"
-        target_data = '/' + os.path.relpath(self.install_data, root) + '/'
-        target_pkgdata = target_data + 'share/ulauncher/'
-        target_scripts = '/' + os.path.relpath(self.install_scripts,
-                                               root) + '/'
+        target_data = f'/{os.path.relpath(self.install_data, root)}/'
+        target_pkgdata = f'{target_data}share/ulauncher/'
+        target_scripts = (f'/{os.path.relpath(self.install_scripts, root)}' + '/')
 
         values = {'__ulauncher_data_directory__': "'%s'" % (target_pkgdata),
                   '__version__': "'%s'" % self.distribution.get_version()}

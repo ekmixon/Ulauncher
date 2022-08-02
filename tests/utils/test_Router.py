@@ -5,7 +5,7 @@ from ulauncher.utils.Router import Router, RoutePathEmpty, RouteNotFound, get_ur
 
 
 def test_get_url_params():
-    p = get_url_params('settings://get/all/?k1=v1&k2=&k3=%s' % quote('!(*#&^%?'))
+    p = get_url_params(f"settings://get/all/?k1=v1&k2=&k3={quote('!(*#&^%?')}")
     assert p['scheme'] == 'settings'
     assert p['path'] == 'get/all/'
     assert p['query'] == {

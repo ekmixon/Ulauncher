@@ -164,10 +164,10 @@ class ExtensionDownloader:
         }
 
     def _find_extension(self, ext_id: str) -> ExtensionRecord:
-        ext = self.ext_db.find(ext_id)
-        if not ext:
+        if ext := self.ext_db.find(ext_id):
+            return ext
+        else:
             raise ExtensionDownloaderError("Extension not found", ErrorName.UnexpectedError)
-        return ext
 
 
 def untar(filename: str, ext_path: str) -> None:

@@ -32,12 +32,10 @@ class ExtensionSearchMode(BaseSearchMode):
         :param ~ulauncher.search.Query.Query query:
         :rtype: :class:`~ulauncher.api.shared.action.BaseAction.BaseAction`
         """
-        controller = self._get_controller_by_keyword(query.get_keyword())
-
-        if not controller:
+        if controller := self._get_controller_by_keyword(query.get_keyword()):
+            return controller.handle_query(query)
+        else:
             raise Exception("Controller not found. (This line shouldn't be entered)")
-
-        return controller.handle_query(query)
 
     def _get_controller_by_keyword(self, kw):
         """

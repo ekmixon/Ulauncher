@@ -28,10 +28,11 @@ class TestAppStatDb:
         def get_by_path(path):
             return {
                 'desktop_file': path,
-                'name': 'name_%s' % path,
-                'description': 'description_%s' % path,
-                'icon': 'icon'
+                'name': f'name_{path}',
+                'description': f'description_{path}',
+                'icon': 'icon',
             }
+
 
         app_db.get_by_path.side_effect = get_by_path
         return app_db
@@ -45,4 +46,4 @@ class TestAppStatDb:
         assert len(db.get_most_frequent(limit=3)) == 3
         for i, file_id in enumerate([4, 3, 6]):
             arg0 = AppResultItem.call_args_list[i][0][0]
-            assert arg0['desktop_file'] == 'file%s.desktop' % file_id
+            assert arg0['desktop_file'] == f'file{file_id}.desktop'

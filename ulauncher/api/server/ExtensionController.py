@@ -70,7 +70,7 @@ class ExtensionController(WebSocket):
         response = pickle.loads(self.data)
 
         if not isinstance(response, Response):
-            raise Exception("Unsupported type %s" % type(response).__name__)
+            raise Exception(f"Unsupported type {type(response).__name__}")
 
         logger.debug('Incoming response (%s, %s) from "%s"', type(response.event).__name__,
                      type(response.action).__name__,
@@ -87,7 +87,7 @@ class ExtensionController(WebSocket):
         """
         self.extension_id = self.request.path[1:]
         if not self.extension_id:
-            raise Exception('Incorrect path %s' % self.request.path)
+            raise Exception(f'Incorrect path {self.request.path}')
 
         logger.info('Extension "%s" connected', self.extension_id)
 

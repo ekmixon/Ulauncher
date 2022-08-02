@@ -31,7 +31,7 @@ class ExtensionServer:
         if not self.is_running():
             raise ServerIsNotRunningError()
 
-        return 'ws://%s:%s/%s' % (self.hostname, self.port, extension_id)
+        return f'ws://{self.hostname}:{self.port}/{extension_id}'
 
     def start(self):
         """
@@ -86,11 +86,14 @@ class ExtensionServer:
         :param str keyword:
         :rtype: ~ulauncher.api.server.ExtensionController.ExtensionController
         """
-        for _, ctl in self.controllers.items():
-            if keyword in ctl.preferences.get_active_keywords():
-                return ctl
-
-        return None
+        return next(
+            (
+                ctl
+                for _, ctl in self.controllers.items()
+                if keyword in ctl.preferences.get_active_keywords()
+            ),
+            None,
+        )
 
 
 class ServerIsRunningError(RuntimeError):

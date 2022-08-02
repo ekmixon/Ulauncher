@@ -58,7 +58,9 @@ class GithubExtension:
 
     def validate_url(self):
         if not re.match(self.url_match_pattern, self.url, re.I):
-            raise GithubExtensionError('Invalid GithubUrl: %s' % self.url, ErrorName.InvalidGithubUrl)
+            raise GithubExtensionError(
+                f'Invalid GithubUrl: {self.url}', ErrorName.InvalidGithubUrl
+            )
 
     def find_compatible_version(self) -> Commit:
         """
@@ -74,8 +76,10 @@ class GithubExtension:
 
         if not sha_or_branch:
             raise GithubExtensionError(
-                "This extension is not compatible with current version Ulauncher extension API (v%s)" % api_version,
-                ErrorName.IncompatibleVersion)
+                f"This extension is not compatible with current version Ulauncher extension API (v{api_version})",
+                ErrorName.IncompatibleVersion,
+            )
+
 
         return self.get_commit(sha_or_branch)
 
@@ -141,22 +145,23 @@ class GithubExtension:
         >>> Ulauncher/ulauncher-timer
         <<< https://github.com/Ulauncher/ulauncher-timer/tarball/master
         """
-        return 'https://github.com/%s/tarball/%s' % (self._get_project_path(), commit)
+        return f'https://github.com/{self._get_project_path()}/tarball/{commit}'
 
     def get_ext_id(self) -> str:
         """
         >>> https://github.com/Ulauncher/ulauncher-timer
         <<< com.github.ulauncher.ulauncher-timer
         """
-        return 'com.github.%s' % self._get_project_path().replace('/', '.').lower()
+        return f"com.github.{self._get_project_path().replace('/', '.').lower()}"
 
     def _get_project_path(self) -> str:
         """
         >>> https://github.com/Ulauncher/ulauncher-timer
         <<< Ulauncher/ulauncher-timer
         """
-        match = re.match(self.url_match_pattern, self.url, re.I)
-        if not match:
-            raise GithubExtensionError('Invalid GithubUrl: %s' % self.url, ErrorName.InvalidGithubUrl)
-
-        return match.group(2)
+        if match := re.match(self.url_match_pattern, self.url, re.I):
+            return match[2]
+        else:
+            raise GithubExtensionError(
+                f'Invalid GithubUrl: {self.url}', ErrorName.InvalidGithubUrl
+            )

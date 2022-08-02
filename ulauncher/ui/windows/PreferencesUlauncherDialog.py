@@ -177,7 +177,7 @@ class PreferencesUlauncherDialog(Gtk.Dialog, WindowHelper):
         return False
 
     def webview_on_context_menu(self, *args):
-        return bool(not get_options().dev)
+        return not get_options().dev
 
     ######################################
     # WebView communication methods
@@ -200,7 +200,7 @@ class PreferencesUlauncherDialog(Gtk.Dialog, WindowHelper):
 
         try:
             resp = rt.dispatch(self, scheme_request.get_uri())
-            callback = '%s(%s);' % (callback_name, json.dumps(resp))
+            callback = f'{callback_name}({json.dumps(resp)});'
         except UlauncherAPIError as e:
             error_type = type(e).__name__
             logger.error('%s: %s', error_type, e)
@@ -211,7 +211,7 @@ class PreferencesUlauncherDialog(Gtk.Dialog, WindowHelper):
                 'stacktrace': traceback.format_exc()
             }))
         except Exception as e:
-            message = 'Unexpected API error. %s: %s' % (type(e).__name__, e)
+            message = f'Unexpected API error. {type(e).__name__}: {e}'
             logger.exception(message)
             callback = '%s(null, %s);' % (callback_name, json.dumps({
                 'message': str(e),
@@ -538,15 +538,17 @@ class PreferencesUlauncherDialog(Gtk.Dialog, WindowHelper):
             'preferences': prefs.get_items(),
             'error': error,
             'is_running': is_running,
-            'runtime_error': ext_runner.get_extension_error(ext_id) if not is_running else None
+            'runtime_error': None
+            if is_running
+            else ext_runner.get_extension_error(ext_id),
         }
 
     def _load_prefs_html(self, page=''):
-        uri = "file://%s#/%s" % (get_data_file('preferences', 'dist', 'index.html'), page)
+        uri = f"file://{get_data_file('preferences', 'dist', 'index.html')}#/{page}"
         self.webview.load_uri(uri)
 
     def _get_bool(self, str_val):
-        return str(str_val).lower() in ('true', '1', 'on')
+        return str(str_val).lower() in {'true', '1', 'on'}
 
     def _get_available_themes(self):
         load_available_themes()

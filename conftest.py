@@ -10,9 +10,12 @@ is_display_enabled = bool(GdkX11.X11Display.get_default())
 
 
 def pytest_runtest_setup(item):
-    if isinstance(item, pytest.Function):
-        if item.iter_markers('with_display') and not is_display_enabled:
-            pytest.skip("Cannot run without a display enabled.")
+    if (
+        isinstance(item, pytest.Function)
+        and item.iter_markers('with_display')
+        and not is_display_enabled
+    ):
+        pytest.skip("Cannot run without a display enabled.")
 
 
 class DictHasValues(dict):
@@ -22,7 +25,7 @@ class DictHasValues(dict):
 
     def __eq__(self, other):
         try:
-            return all([self.find(k, other) == v for k, v in self.items()])
+            return all(self.find(k, other) == v for k, v in self.items())
         except KeyError:
             return False
 

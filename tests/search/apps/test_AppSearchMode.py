@@ -27,7 +27,7 @@ class TestAppSearchMode:
 
     def test_handle_query__RenderResultListAction__is_called(self, mode, app_db, Render):
         query = mock.Mock()
-        app_db.find.return_value = [mock.Mock() for i in range(4)]
+        app_db.find.return_value = [mock.Mock() for _ in range(4)]
         mode.handle_query(query)
         Render.assert_called_once_with(app_db.find.return_value)
 
@@ -36,7 +36,7 @@ class TestAppSearchMode:
         other_search_mode = mock.Mock()
         other_search_mode.get_searchable_items.return_value = []
         search_modes.append(other_search_mode)
-        app_db.find.return_value = [mock.Mock() for i in range(4)]
+        app_db.find.return_value = [mock.Mock() for _ in range(4)]
 
         mode.handle_query(query)
 

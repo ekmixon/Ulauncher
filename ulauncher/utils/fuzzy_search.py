@@ -17,7 +17,7 @@ def get_matching_indexes(query, text):
     text = text.lower()
     m = len(query)
     n = len(text)
-    counter = [[0] * (n + 1) for x in range(m + 1)]
+    counter = [[0] * (n + 1) for _ in range(m + 1)]
     for i in range(m):
         for j in range(n):
             if query[i] == text[j]:

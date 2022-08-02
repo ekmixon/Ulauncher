@@ -19,7 +19,7 @@ class ShortcutSearchMode(BaseSearchMode):
         for s in self.shortcutsDb.get_shortcuts():
             if query == s.get('keyword') and s.get('run_without_argument'):
                 return s
-            if query.startswith('%s ' % s.get('keyword')):
+            if query.startswith(f"{s.get('keyword')} "):
                 return s
 
         return None
@@ -31,11 +31,10 @@ class ShortcutSearchMode(BaseSearchMode):
         """
         @return Action object
         """
-        shortcut = self._get_active_shortcut(query)
-        if not shortcut:
+        if shortcut := self._get_active_shortcut(query):
+            return RenderResultListAction([ShortcutResultItem(**shortcut)])
+        else:
             raise Exception('No active shortcut. This line should not be entered')
-
-        return RenderResultListAction([ShortcutResultItem(**shortcut)])
 
     def get_default_items(self):
         return self._create_items([s for s in self.shortcutsDb.get_shortcuts() if s['is_default_search']],

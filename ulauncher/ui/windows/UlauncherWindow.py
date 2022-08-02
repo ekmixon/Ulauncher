@@ -317,7 +317,7 @@ class UlauncherWindow(Gtk.Window, WindowHelper):
         if not app_cache_db.find('startup_hotkey_notification'):
             app_cache_db.put('startup_hotkey_notification', True)
             app_cache_db.commit()
-            show_notification("Ulauncher", "Hotkey is set to %s" % display_name)
+            show_notification("Ulauncher", f"Hotkey is set to {display_name}")
 
     def _get_user_query(self):
         return Query(self.input.get_text())
@@ -395,7 +395,7 @@ class UlauncherWindow(Gtk.Window, WindowHelper):
     def create_item_widgets(items, query):
         results = []
         for index, result_item in enumerate(items):
-            glade_filename = get_data_file('ui', '%s.ui' % result_item.UI_FILE)
+            glade_filename = get_data_file('ui', f'{result_item.UI_FILE}.ui')
             if not os.path.exists(glade_filename):
                 glade_filename = None
 

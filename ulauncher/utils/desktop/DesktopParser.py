@@ -21,8 +21,8 @@ class DesktopParser:
         """
         with open(self._filename, 'r') as f:
             is_desktop_section = False
-            for line in f.readlines():
-                line = line.strip(' ' + os.linesep)
+            for line in f:
+                line = line.strip(f' {os.linesep}')
                 if line == self.DESKTOP_SECTION:
                     is_desktop_section = True
                     continue
@@ -54,7 +54,7 @@ class DesktopParser:
         for key, value in self.__property_list:
             if key.lower() == name.lower():
                 return value
-        raise KeyError('%s' % name)
+        raise KeyError(f'{name}')
 
     def set(self, name, value):
         if not name:

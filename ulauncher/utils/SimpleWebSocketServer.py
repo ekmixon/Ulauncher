@@ -2,20 +2,19 @@
 The MIT License (MIT)
 Copyright (c) 2013 Dave P.
 '''
+
 # pylint: disable=wrong-import-position, super-init-not-called, too-many-instance-attributes, too-many-statements,
 # pylint: disable=too-many-branches, too-many-locals, broad-except, too-many-arguments, no-member
 # pylint: disable=too-many-nested-blocks, unused-import, ungrouped-imports
 import sys
 VER = sys.version_info[0]
 if VER >= 3:
-    import socketserver
-    from http.server import BaseHTTPRequestHandler
     from io import StringIO, BytesIO
 else:
-    import socketserver  # noqa: F401
-    from http.server import BaseHTTPRequestHandler
     from io import StringIO
 
+from http.server import BaseHTTPRequestHandler
+import socketserver
 import hashlib
 import base64
 import socket
@@ -33,18 +32,12 @@ __all__ = ['WebSocket',
 
 
 def _check_unicode(val):
-    if VER >= 3:
-        return isinstance(val, str)
-
     return isinstance(val, str)
 
 
 class HTTPRequest(BaseHTTPRequestHandler):
     def __init__(self, request_text):
-        if VER >= 3:
-            self.rfile = BytesIO(request_text)
-        else:
-            self.rfile = StringIO(request_text)
+        self.rfile = BytesIO(request_text) if VER >= 3 else StringIO(request_text)
         self.raw_requestline = self.rfile.readline()
         self.error_code = self.error_message = None
         self.parse_request()
@@ -143,7 +136,7 @@ class WebSocket:
             pass
         elif self.opcode == BINARY:
             pass
-        elif self.opcode == PONG or self.opcode == PING:
+        elif self.opcode in [PONG, PING]:
             if len(self.data) > 125:
                 raise Exception('control frame length can not be > 125')
         else:
@@ -176,8 +169,18 @@ class WebSocket:
             return
 
         if self.fin == 0:
-            if self.opcode != STREAM:
-                if self.opcode == PING or self.opcode == PONG:
+            if self.opcode == STREAM:
+                if self.frag_start is False:
+                    raise Exception('fragmentation protocol error')
+
+                if self.frag_type == TEXT:
+                    if utf_str := self.frag_decoder.decode(self.data, final=False):
+                        self.frag_buffer.append(utf_str)
+                else:
+                    self.frag_buffer.extend(self.data)
+
+            else:
+                if self.opcode in [PING, PONG]:
                     raise Exception('control messages can not be fragmented')
 
                 self.frag_type = self.opcode
@@ -186,63 +189,47 @@ class WebSocket:
 
                 if self.frag_type == TEXT:
                     self.frag_buffer = []
-                    utf_str = self.frag_decoder.decode(self.data, final=False)
-                    if utf_str:
+                    if utf_str := self.frag_decoder.decode(self.data, final=False):
                         self.frag_buffer.append(utf_str)
                 else:
                     self.frag_buffer = bytearray()
                     self.frag_buffer.extend(self.data)
 
+        elif self.opcode == STREAM:
+            if self.frag_start is False:
+                raise Exception('fragmentation protocol error')
+
+            if self.frag_type == TEXT:
+                utf_str = self.frag_decoder.decode(self.data, final=True)
+                self.frag_buffer.append(utf_str)
+                self.data = ''.join(self.frag_buffer)
             else:
-                if self.frag_start is False:
-                    raise Exception('fragmentation protocol error')
+                self.frag_buffer.extend(self.data)
+                self.data = self.frag_buffer
 
-                if self.frag_type == TEXT:
-                    utf_str = self.frag_decoder.decode(self.data, final=False)
-                    if utf_str:
-                        self.frag_buffer.append(utf_str)
-                else:
-                    self.frag_buffer.extend(self.data)
+            self.handleMessage()
 
-        else:
-            if self.opcode == STREAM:
-                if self.frag_start is False:
-                    raise Exception('fragmentation protocol error')
+            self.frag_decoder.reset()
+            self.frag_type = BINARY
+            self.frag_start = False
+            self.frag_buffer = None
 
-                if self.frag_type == TEXT:
-                    utf_str = self.frag_decoder.decode(self.data, final=True)
-                    self.frag_buffer.append(utf_str)
-                    self.data = ''.join(self.frag_buffer)
-                else:
-                    self.frag_buffer.extend(self.data)
-                    self.data = self.frag_buffer
+        elif self.opcode == PING:
+            self._sendMessage(False, PONG, self.data)
 
-                self.handleMessage()
+        elif self.opcode != PONG:
+            if self.frag_start is True:
+                raise Exception('fragmentation protocol error')
 
-                self.frag_decoder.reset()
-                self.frag_type = BINARY
-                self.frag_start = False
-                self.frag_buffer = None
+            if self.opcode == TEXT:
+                try:
+                    self.data = self.data.decode('utf8', errors='strict')
+                except Exception:
+                    # this may not be a utf8 string, so return it as is
+                    # this fixes https://github.com/Ulauncher/Ulauncher/issues/294
+                    pass
 
-            elif self.opcode == PING:
-                self._sendMessage(False, PONG, self.data)
-
-            elif self.opcode == PONG:
-                pass
-
-            else:
-                if self.frag_start is True:
-                    raise Exception('fragmentation protocol error')
-
-                if self.opcode == TEXT:
-                    try:
-                        self.data = self.data.decode('utf8', errors='strict')
-                    except Exception:
-                        # this may not be a utf8 string, so return it as is
-                        # this fixes https://github.com/Ulauncher/Ulauncher/issues/294
-                        pass
-
-                self.handleMessage()
+            self.handleMessage()
 
     def _handleData(self):
         # do the HTTP header and handshake
@@ -272,19 +259,17 @@ class WebSocket:
                     self.handshaked = True
                     self.handleConnected()
                 except Exception as e:
-                    raise Exception('handshake failed: %s' % e) from e
+                    raise Exception(f'handshake failed: {e}') from e
 
-        # else do normal data
         else:
             data = self.client.recv(16384)
             if not data:
                 raise Exception("remote socket closed")
 
-            if VER >= 3:
-                for d in data:
+            for d in data:
+                if VER >= 3:
                     self._parseMessage(d)
-            else:
-                for d in data:
+                else:
                     self._parseMessage(ord(d))
 
     def close(self, status=1000, reason=''):
@@ -437,34 +422,27 @@ class WebSocket:
             if self.opcode == PING and length > 125:
                 raise Exception('ping packet is too large')
 
-            if mask == 128:
-                self.hasmask = True
-            else:
-                self.hasmask = False
-
+            self.hasmask = mask == 128
             if length <= 125:
                 self.length = length
 
                 # if we have a mask we must read it
-                if self.hasmask is True:
+                if self.hasmask:
                     self.maskarray = bytearray()
                     self.state = MASK
-                else:
-                    # if there is no mask and no payload we are done
-                    if self.length <= 0:
-                        try:
-                            self._handlePacket()
-                        except Exception:
-                            traceback.print_exc(file=sys.stderr)
-                        finally:
-                            self.state = self.HEADERB1
-                            self.data = bytearray()
-
-                    # we have no mask and some payload
-                    else:
-                        # self.index = 0
+                elif self.length <= 0:
+                    try:
+                        self._handlePacket()
+                    except Exception:
+                        traceback.print_exc(file=sys.stderr)
+                    finally:
+                        self.state = self.HEADERB1
                         self.data = bytearray()
-                        self.state = PAYLOAD
+
+                else:
+                    # self.index = 0
+                    self.data = bytearray()
+                    self.state = PAYLOAD
 
             elif length == 126:
                 self.lengtharray = bytearray()
@@ -486,22 +464,19 @@ class WebSocket:
                 if self.hasmask is True:
                     self.maskarray = bytearray()
                     self.state = MASK
-                else:
-                    # if there is no mask and no payload we are done
-                    if self.length <= 0:
-                        try:
-                            self._handlePacket()
-                        except Exception:
-                            traceback.print_exc(file=sys.stderr)
-                        finally:
-                            self.state = HEADERB1
-                            self.data = bytearray()
-
-                    # we have no mask and some payload
-                    else:
-                        # self.index = 0
+                elif self.length <= 0:
+                    try:
+                        self._handlePacket()
+                    except Exception:
+                        traceback.print_exc(file=sys.stderr)
+                    finally:
+                        self.state = HEADERB1
                         self.data = bytearray()
-                        self.state = PAYLOAD
+
+                else:
+                    # self.index = 0
+                    self.data = bytearray()
+                    self.state = PAYLOAD
 
         elif self.state == LENGTHLONG:
 
@@ -516,24 +491,20 @@ class WebSocket:
                 if self.hasmask is True:
                     self.maskarray = bytearray()
                     self.state = MASK
-                else:
-                    # if there is no mask and no payload we are done
-                    if self.length <= 0:
-                        try:
-                            self._handlePacket()
-                        except Exception:
-                            traceback.print_exc(file=sys.stderr)
-                        finally:
-                            self.state = HEADERB1
-                            self.data = bytearray()
-
-                    # we have no mask and some payload
-                    else:
-                        # self.index = 0
+                elif self.length <= 0:
+                    try:
+                        self._handlePacket()
+                    except Exception:
+                        traceback.print_exc(file=sys.stderr)
+                    finally:
+                        self.state = HEADERB1
                         self.data = bytearray()
-                        self.state = PAYLOAD
 
-        # MASK STATE
+                else:
+                    # self.index = 0
+                    self.data = bytearray()
+                    self.state = PAYLOAD
+
         elif self.state == MASK:
             self.maskarray.append(byte)
 
@@ -557,7 +528,6 @@ class WebSocket:
                     self.data = bytearray()
                     self.state = PAYLOAD
 
-        # PAYLOAD STATE
         elif self.state == PAYLOAD:
             if self.hasmask is True:
                 self.data.append(byte ^ self.maskarray[self.index % 4])
@@ -689,8 +659,7 @@ class SimpleSSLWebSocketServer(SimpleWebSocketServer):
         self.context.load_cert_chain(certfile, keyfile)
 
     def _decorateSocket(self, sock):
-        sslsock = self.context.wrap_socket(sock, server_side=True)
-        return sslsock
+        return self.context.wrap_socket(sock, server_side=True)
 
     def _constructWebSocket(self, sock, address):
         ws = self.websocketclass(self, sock, address)

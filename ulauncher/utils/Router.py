@@ -6,14 +6,14 @@ RE_URL = re.compile(r'^(?P<scheme>.*)://(?P<path>[^\?]*)(\?(?P<query>.*))?$', fl
 
 def get_url_params(url):
     params = re.search(RE_URL, url)
-    query = params.group('query')
+    query = params['query']
     if query:
         pairs = list(map(lambda kv: kv.split('='), query.split('&')))
         query = {k: unquote(v) for k, v in pairs}
     return {
-        'scheme': params.group('scheme'),
-        'path': params.group('path'),
-        'query': query or None
+        'scheme': params['scheme'],
+        'path': params['path'],
+        'query': query or None,
     }
 
 
@@ -44,7 +44,7 @@ class Router:
         try:
             callback = self._callbacks[url_params['path'].strip('/')]
         except KeyError as e:
-            raise RouteNotFound('Route not found for path %s' % url_params['path']) from e
+            raise RouteNotFound(f"Route not found for path {url_params['path']}") from e
 
         return callback(context, url_params)
 

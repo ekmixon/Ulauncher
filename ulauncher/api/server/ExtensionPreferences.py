@@ -35,7 +35,7 @@ class ExtensionPreferences:
         return cls(ext_id, ExtensionManifest.open(ext_id))
 
     def __init__(self, ext_id: str, manifest: ExtensionManifest, ext_preferences_dir: str = EXT_PREFERENCES_DIR):
-        self.db_path = os.path.join(ext_preferences_dir, '%s.db' % ext_id)
+        self.db_path = os.path.join(ext_preferences_dir, f'{ext_id}.db')
         self.db = KeyValueDb[str, str](self.db_path)
         self.manifest = manifest
         self._db_is_open = False
@@ -70,21 +70,13 @@ class ExtensionPreferences:
         """
         :rtype: dict(id=value, id2=value2, ...)
         """
-        items = {}
-        for i in self.get_items():
-            items[i['id']] = i['value']
-
-        return items
+        return {i['id']: i['value'] for i in self.get_items()}
 
     def get(self, id: str) -> Optional[PreferenceItem]:
         """
         Returns one item
         """
-        for i in self.get_items():
-            if i['id'] == id:
-                return i
-
-        return None
+        return next((i for i in self.get_items() if i['id'] == id), None)
 
     def get_active_keywords(self) -> List[str]:
         """

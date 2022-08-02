@@ -84,11 +84,7 @@ class ExtensionManifest:
         return self.manifest.get('preferences', [])
 
     def get_preference(self, id) -> Optional[ManifestPreferenceItem]:
-        for p in self.get_preferences():
-            if p['id'] == id:
-                return p
-
-        return None
+        return next((p for p in self.get_preferences() if p['id'] == id), None)
 
     def get_option(self, name, default=None):
         try:
@@ -108,7 +104,7 @@ class ExtensionManifest:
                 assert p.get('id'), 'Preferences error. Id cannot be empty'
                 assert p.get('type'), 'Preferences error. Type cannot be empty'
                 assert p.get('type') in ["keyword", "input", "text", "select"], \
-                    'Preferences error. Type can be "keyword", "input", "text", or "select"'
+                        'Preferences error. Type can be "keyword", "input", "text", or "select"'
                 assert p.get('name'), 'Preferences error. Name cannot be empty'
                 if p['type'] == 'keyword':
                     assert p.get('default_value'), 'Preferences error. Default value cannot be empty for keyword'
@@ -118,7 +114,9 @@ class ExtensionManifest:
         except AssertionError as e:
             raise ExtensionManifestError(str(e), ErrorName.InvalidManifestJson) from e
         except KeyError as e:
-            raise ExtensionManifestError('%s is not provided' % e, ErrorName.InvalidManifestJson) from e
+            raise ExtensionManifestError(
+                f'{e} is not provided', ErrorName.InvalidManifestJson
+            ) from e
 
     def check_compatibility(self):
         if not satisfies(api_version, self.get_required_api_version()):

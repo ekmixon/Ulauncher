@@ -81,10 +81,13 @@ class ResultItem:
         :rtype: str
         """
         if query and self._highlightable:
-            return highlight_text(query if not self._is_extension else query.get_argument(''),
-                                  self.get_name(),
-                                  open_tag='<span foreground="%s">' % color,
-                                  close_tag='</span>')
+            return highlight_text(
+                query.get_argument('') if self._is_extension else query,
+                self.get_name(),
+                open_tag='<span foreground="%s">' % color,
+                close_tag='</span>',
+            )
+
         # don't highlight if query is empty
         return self.get_name()
 

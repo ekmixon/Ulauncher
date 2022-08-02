@@ -11,59 +11,41 @@ def ve2no(f, *args):
 
 def slow_index(seq, k):
     'Location of match or -1 if not found'
-    for i, item in enumerate(seq):
-        if item == k:
-            return i
-    return -1
+    return next((i for i, item in enumerate(seq) if item == k), -1)
 
 
 def slow_find(seq, k):
     'First item with a key equal to k. -1 if not found'
-    for item in seq:
-        if item == k:
-            return item
-    return -1
+    return next((item for item in seq if item == k), -1)
 
 
 def slow_find_le(seq, k):
     'Last item with a key less-than or equal to k.'
-    for item in reversed(seq):
-        if item <= k:
-            return item
-    return -1
+    return next((item for item in reversed(seq) if item <= k), -1)
 
 
 def slow_find_lt(seq, k):
     'Last item with a key less-than k.'
-    for item in reversed(seq):
-        if item < k:
-            return item
-    return -1
+    return next((item for item in reversed(seq) if item < k), -1)
 
 
 def slow_find_ge(seq, k):
     'First item with a key-value greater-than or equal to k.'
-    for item in seq:
-        if item >= k:
-            return item
-    return -1
+    return next((item for item in seq if item >= k), -1)
 
 
 def slow_find_gt(seq, k):
     'First item with a key-value greater-than or equal to k.'
-    for item in seq:
-        if item > k:
-            return item
-    return -1
+    return next((item for item in seq if item > k), -1)
 
 
 # pylint: disable=too-many-statements
 def test_SortedCollection():
     from random import choice
     pool = [1.5, 2, 2.0, 3, 3.0, 3.5, 4, 4.0, 4.5]
-    for i in range(500):
+    for _ in range(500):
         for n in range(6):
-            s = [choice(pool) for i in range(n)]
+            s = [choice(pool) for _ in range(n)]
             sc = SortedCollection(s)
             s.sort()
             for probe in pool:

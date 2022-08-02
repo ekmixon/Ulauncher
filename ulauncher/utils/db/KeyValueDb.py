@@ -27,7 +27,7 @@ class KeyValueDb(Generic[Key, Value]):
         """Create a new data base or open existing one"""
         if os.path.exists(self._name):
             if not os.path.isfile(self._name):
-                raise IOError("%s exists and is not a file" % self._name)
+                raise IOError(f"{self._name} exists and is not a file")
 
             if os.path.getsize(self._name) == 0:
                 # ignore empty files

@@ -20,8 +20,7 @@ class AutostartPreference:
         :rtype: str
         :returns: path to desktop file
         """
-        record = AppDb.get_instance().get_by_name('Ulauncher')
-        if record:
+        if record := AppDb.get_instance().get_by_name('Ulauncher'):
             return record['desktop_file']
 
         return None
@@ -67,10 +66,10 @@ class AutostartPreference:
                 autostart_info.set_filename(self._ulauncher_autostart_desktop)
 
             autostart_info.set(self.AUTOSTART_FLAG, str(bool(is_on)).lower())
-            autostart_info.set('Exec', '%s %s' % (autostart_info.get('Exec'), '--hide-window'))
+            autostart_info.set('Exec', f"{autostart_info.get('Exec')} --hide-window")
             autostart_info.write()
         except Exception as e:
-            raise SwitchError('Unexpected exception: %s' % e) from e
+            raise SwitchError(f'Unexpected exception: {e}') from e
 
 
 class SwitchError(RuntimeError):

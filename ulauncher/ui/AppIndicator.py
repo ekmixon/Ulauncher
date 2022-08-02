@@ -39,9 +39,8 @@ logger = logging.getLogger(__name__)
 def onlyIfAppindicatorIsSupported(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        if appIndicatorSupported:
-            return func(*args, **kwargs)
-        return None
+        return func(*args, **kwargs) if appIndicatorSupported else None
+
     return wrapped
 
 

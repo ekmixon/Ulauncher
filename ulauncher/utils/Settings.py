@@ -105,13 +105,13 @@ class Settings(GObject.GObject):
     def __init__(self):
         GObject.GObject.__init__(self)
         self._filename = None
-        self._properties = dict((name, opts[-2]) for name, opts in GPROPERTIES.items())
+        self._properties = {name: opts[-2] for name, opts in GPROPERTIES.items()}
 
     def load_from_file(self, filename):
         self._filename = filename
         if os.path.exists(filename):
             if not os.path.isfile(filename):
-                raise IOError("%s exists and is not a file" % filename)
+                raise IOError(f"{filename} exists and is not a file")
 
             with open(filename, 'r') as f:
                 self._properties = json.load(f)

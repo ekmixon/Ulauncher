@@ -46,7 +46,7 @@ def find_desktop_files(dirs: List[str] = None, pattern: str = "*.desktop") -> Ge
     blacklisted_dirs = blacklisted_dirs_srt.split(':') if blacklisted_dirs_srt else []
     for file in deduped_files:
         try:
-            if any([file.startswith(dir) for dir in blacklisted_dirs]):
+            if any(file.startswith(dir) for dir in blacklisted_dirs):
                 continue
         except UnicodeDecodeError:
             continue
@@ -105,8 +105,7 @@ def find_apps_cached(dirs=None, disable_desktop_filters=False):
 
     desktop_file_cache_dir = os.path.join(CACHE_DIR, 'desktop_dirs.db')
     cache = KeyValueDb(desktop_file_cache_dir).open()
-    desktop_dirs = cache.find('desktop_dirs')
-    if desktop_dirs:
+    if desktop_dirs := cache.find('desktop_dirs'):
         for dir in desktop_dirs:
             app_info = read_desktop_file(dir)
             if filter_app(app_info, disable_desktop_filters):

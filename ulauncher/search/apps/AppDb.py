@@ -99,11 +99,7 @@ class AppDb:
             logger.exception('Exception %s for query: %s. Name: %s', e, query, name)
             raise
 
-        row = collection.fetchone()
-        if row:
-            return self._row_to_rec(row)
-
-        return None
+        return self._row_to_rec(row) if (row := collection.fetchone()) else None
 
     def get_by_path(self, desktop_file):
         query = 'SELECT * FROM app_db where desktop_file = ?'
@@ -113,11 +109,7 @@ class AppDb:
             logger.exception('Exception %s for query: %s. Path: %s', e, query, desktop_file)
             raise
 
-        row = collection.fetchone()
-        if row:
-            return self._row_to_rec(row)
-
-        return None
+        return self._row_to_rec(row) if (row := collection.fetchone()) else None
 
     def remove_by_path(self, desktop_file):
         """
@@ -161,7 +153,7 @@ def get_exec_name(exec):
     Similar to Gio.DesktopAppInfo.get_executable(), except that will not drop env keyword and vars
     """
     match = re.match(r'^(env\s+)?([^\s=]+=[^\s=]+\s+)*([^\s=]+\/)*(?P<bin>[^\s=]*)', exec, re.I)
-    return match.group('bin') if match else ""
+    return match['bin'] if match else ""
 
 
 def search_name(name, exec_name):
@@ -169,4 +161,4 @@ def search_name(name, exec_name):
     Returns string that will be used for search
     We want to make sure app can be searchable by its exec_line
     """
-    return '{}\n{}'.format(name, exec_name)
+    return f'{name}\n{exec_name}'

@@ -49,8 +49,7 @@ class Extension:
             return
 
         for listener in listeners:
-            action = listener.on_event(event, self)
-            if action:
+            if action := listener.on_event(event, self):
                 assert isinstance(action, BaseAction), "on_event return value is not an instance of BaseAction"
                 self._client.send(Response(event, action))
 

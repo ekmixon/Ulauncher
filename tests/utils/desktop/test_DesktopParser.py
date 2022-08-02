@@ -38,7 +38,7 @@ class TestDesktopParser:
 
     def get_lines(self, desktop_file):
         with open(desktop_file, 'r') as f:
-            return [line.strip(' %s' % os.linesep) for line in f.readlines()]
+            return [line.strip(f' {os.linesep}') for line in f.readlines()]
 
     def test_get(self, parser):
         assert parser.get('Name') == 'Ulauncher'

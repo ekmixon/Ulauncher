@@ -45,7 +45,7 @@ class Builder(Gtk.Builder):
             Assumed to be in the 'ui' directory under the data path.
         """
         # Look for the ui file that describes the user interface.
-        ui_filename = get_data_file('ui', '%s.ui' % (builder_file_name,))
+        ui_filename = get_data_file('ui', f'{builder_file_name}.ui')
         if not os.path.exists(ui_filename):
             ui_filename = None
 
@@ -106,10 +106,10 @@ class Builder(Gtk.Builder):
             # populate connections list
             ele_signals = ele_widget.findall("signal")
 
-            connections = [
-                (name, ele_signal.attrib['name'], ele_signal.attrib['handler']) for ele_signal in ele_signals]
-
-            if connections:
+            if connections := [
+                (name, ele_signal.attrib['name'], ele_signal.attrib['handler'])
+                for ele_signal in ele_signals
+            ]:
                 self.connections.extend(connections)
 
         ele_signals = tree.iter("signal")
@@ -124,7 +124,7 @@ class Builder(Gtk.Builder):
         filename = inspect.getfile(callback_obj.__class__)
         callback_handler_dict = dict_from_callback_obj(callback_obj)
         connection_dict = {}
-        connection_dict.update(self.glade_handler_dict)
+        connection_dict |= self.glade_handler_dict
         connection_dict.update(callback_handler_dict)
         for item in connection_dict.items():
             if item[1] is None:
@@ -245,17 +245,9 @@ def dict_from_callback_obj(callback_obj):
 
     aliases = []
     for item in alias_groups:
-        for alias in item[0]:
-            aliases.append((alias, item[1]))
-
+        aliases.extend((alias, item[1]) for alias in item[0])
     dict_methods = dict(methods)
-    dict_aliases = dict(aliases)
-
-    results = {}
-    results.update(dict_methods)
-    results.update(dict_aliases)
-
-    return results
+    return dict_methods | aliases
 
 
 def auto_connect_by_name(callback_obj, builder):
@@ -282,7 +274,7 @@ def auto_connect_by_name(callback_obj, builder):
         for sig in signal_names:
             # using convention suggested by glade
             sig = sig.replace("-", "_")
-            handler_names = ["on_%s_%s" % (widget_name, sig)]
+            handler_names = [f"on_{widget_name}_{sig}"]
 
             # log all possible event handler names
             # if widget_name == 'notebook':
@@ -292,7 +284,7 @@ def auto_connect_by_name(callback_obj, builder):
             # specified in the handler name. That is use
             # on_destroy() instead of on_windowname_destroy()
             if widget is callback_obj:
-                handler_names.append("on_%s" % sig)
+                handler_names.append(f"on_{sig}")
 
             do_connect(item, sig, handler_names, callback_handler_dict, builder.connections)
 

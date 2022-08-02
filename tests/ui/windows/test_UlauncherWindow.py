@@ -122,4 +122,4 @@ class TestUlauncherWindow:
         GtkBuilder.return_value.get_object.return_value.initialize.assert_called_with(
             GtkBuilder.return_value, result_item, 0, 'test')
         GtkBuilder.return_value.add_from_file.assert_called_with(get_data_file.return_value)
-        get_data_file.assert_called_with('ui', '%s.ui' % result_item.UI_FILE)
+        get_data_file.assert_called_with('ui', f'{result_item.UI_FILE}.ui')

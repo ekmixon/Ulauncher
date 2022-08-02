@@ -36,12 +36,7 @@ class ShortcutResultItem(ResultItem):
         return super().get_name_highlighted(query, color)
 
     def get_description(self, query):
-        if self.cmd.startswith('#!'):
-            # this is a script
-            description = ''
-        else:
-            description = self.cmd
-
+        description = '' if self.cmd.startswith('#!') else self.cmd
         if self.is_default_search:
             return description.replace('%s', query)
 
@@ -89,7 +84,7 @@ class ShortcutResultItem(ResultItem):
                 action = RunScriptAction(self.cmd, argument)
             action_list.append(action)
         else:
-            action_list.append(SetUserQueryAction('%s ' % self.keyword))
+            action_list.append(SetUserQueryAction(f'{self.keyword} '))
 
         self._query_history.save_query(query, self.get_name())
 

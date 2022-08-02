@@ -36,10 +36,7 @@ class LaunchAppAction(BaseAction):
     def run(self):
         app = read_desktop_file(self.filename)
         app_id = Path(self.filename).with_suffix('').stem
-        exec = app.get_string('Exec')
-        if not exec:
-            logger.error("No command to run %s", self.filename)
-        else:
+        if exec := app.get_string('Exec'):
             # strip field codes %f, %F, %u, %U, etc
             sanitized_exec = re.sub(r'\%[uUfFdDnNickvm]', '', exec).rstrip()
             terminal_exec = shlex.split(settings.get_property('terminal-command'))
@@ -69,7 +66,7 @@ class LaunchAppAction(BaseAction):
 
             try:
                 logger.info('Run application %s (%s) Exec %s', app.get_name(), self.filename, exec)
-                envp = ["{}={}".format(k, v) for k, v in env.items()]
+                envp = [f"{k}={v}" for k, v in env.items()]
                 GLib.spawn_async(
                     argv=sanitized_exec,
                     envp=envp,
@@ -79,3 +76,6 @@ class LaunchAppAction(BaseAction):
                 )
             except Exception as e:
                 logger.error('%s: %s', type(e).__name__, e)
+
+        else:
+            logger.error("No command to run %s", self.filename)

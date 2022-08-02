@@ -18,8 +18,7 @@ class ProcessErrorExtractor:
         """
         Returns a name of a module that extension failed to import
         """
-        match = re.match(r"^.*'(\w+)'$", self.error)
-        if not match:
+        if match := re.match(r"^.*'(\w+)'$", self.error):
+            return match[1]
+        else:
             raise UlauncherAPIError('Could not extract errored module name from process output')
-
-        return match.group(1)

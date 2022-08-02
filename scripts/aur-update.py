@@ -47,11 +47,11 @@ def set_pkg_key(key, val):
 
 def push_update(source):
     ssh_key = os.sep.join((project_path, 'scripts', 'aur_key'))
-    git_ssh_command = 'ssh -oStrictHostKeyChecking=no -i %s' % ssh_key
+    git_ssh_command = f'ssh -oStrictHostKeyChecking=no -i {ssh_key}'
     ssh_enabled_env = dict(os.environ, GIT_SSH_COMMAND=git_ssh_command)
     temp_dir = mkdtemp()
-    print("Temp dir: %s" % temp_dir)
-    print("Cloning AUR repo: %s" % aur_repo)
+    print(f"Temp dir: {temp_dir}")
+    print(f"Cloning AUR repo: {aur_repo}")
     run_shell(f'git clone {aur_repo} {temp_dir}', env=ssh_enabled_env)
     os.chdir(temp_dir)
     print("Overwriting PKGBUILD and .SRCINFO")
@@ -71,8 +71,7 @@ def push_update(source):
 
 
 def run_shell(command, **kw):
-    code = call(shlex.split(command), **kw)
-    if code:
+    if code := call(shlex.split(command), **kw):
         print(f'ERROR: command {command} exited with code {code}')
         sys.exit(1)
 

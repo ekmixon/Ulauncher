@@ -13,7 +13,9 @@ def setup_logging():
 
     ext_name = COLOR_SEQ % (30 + randint(1, 8)) + get_extension_name() + RESET_SEQ
     formatter = logging.Formatter(
-        ext_name + " | %(asctime)s | %(levelname)s | %(name)s: %(funcName)s() | %(message)s")
+        f"{ext_name} | %(asctime)s | %(levelname)s | %(name)s: %(funcName)s() | %(message)s"
+    )
+
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)

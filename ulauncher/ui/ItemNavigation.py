@@ -55,7 +55,7 @@ class ItemNavigation:
 
         if self.selected is not None:
             item = self.items[self.selected]
-            action = item.on_enter(query) if not alt else item.on_alt_enter(query)
+            action = item.on_alt_enter(query) if alt else item.on_enter(query)
             if not action:
                 return True
             action.run()

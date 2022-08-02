@@ -68,10 +68,11 @@ class AppNotifyEventHandler(pyinotify.ProcessEvent):
                     # skip this file for now
                     continue
 
-                if time_passed > self.RETRY_TIME_SPAN[1]:
-                    # give up on file after time limit
-                    if pathname in self._deferred_files:
-                        del self._deferred_files[pathname]
+                if (
+                    time_passed > self.RETRY_TIME_SPAN[1]
+                    and pathname in self._deferred_files
+                ):
+                    del self._deferred_files[pathname]
 
                 try:
                     self._add_file_sync(pathname)

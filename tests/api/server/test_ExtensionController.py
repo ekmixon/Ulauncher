@@ -85,7 +85,7 @@ class TestExtensionController:
         result_renderer.handle_event.assert_called_with(mock.ANY, controller)
 
     def test_handleMessage__unsupported_data_type__exception_raised(self, controller):
-        controller.data = dict()
+        controller.data = {}
         with pytest.raises(Exception):
             controller.handleMessage()
 

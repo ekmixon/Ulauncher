@@ -65,7 +65,7 @@ class ExtensionRunner:
         :rtype: :class:`threading.Thread`
         """
         if self.is_running(extension_id):
-            raise ExtensionIsRunningError('Extension ID: %s' % extension_id)
+            raise ExtensionIsRunningError(f'Extension ID: {extension_id}')
 
         manifest = ExtensionManifest.open(extension_id)
         manifest.validate()
@@ -108,8 +108,7 @@ class ExtensionRunner:
                 line = proc.stderr.readline().decode()
                 if line != "":
                     lasterr = line
-                    print(line, end='')
-
+                    print(lasterr, end='')
             code = proc.returncode
 
             if code <= 0:
@@ -149,7 +148,7 @@ class ExtensionRunner:
         Terminates extension
         """
         if not self.is_running(extension_id):
-            raise ExtensionIsNotRunningError('Extension ID: %s' % extension_id)
+            raise ExtensionIsNotRunningError(f'Extension ID: {extension_id}')
 
         logger.info('Terminating extension "%s"', extension_id)
         proc = self.extension_procs[extension_id]
